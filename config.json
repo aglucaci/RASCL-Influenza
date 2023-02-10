@@ -1,0 +1,12 @@
+{
+  "label":"flu-latest",
+  "queryDataDir":"flu-query",
+  "backgroundDataDir":"flu-background",
+  "fileEnding": ".fasta",
+  "referenceSequencesDataDir": "RefSeqs",
+  "max_ref":"200",
+  "max_query":"500",
+  "threshold_query":"0.0005",
+  "threshold_ref":"0.001",
+  "hyphy-analyses":"hyphy-analyses"
+}

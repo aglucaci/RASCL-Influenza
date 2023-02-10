@@ -1,0 +1,14 @@
+name: RASCL_Influenza
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - biopython=1.79
+  - hyphy=2.5.39
+  - raxml-ng=1.1.0 
+  - snakemake=7.8.5
+  - stephenshank::tn93=1.0.7
+  - python-bioext=0.20.4
+  - python=3.7.2
