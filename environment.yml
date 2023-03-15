@@ -5,10 +5,10 @@ channels:
   - defaults
 
 dependencies:
-  - biopython=1.79
-  - hyphy=2.5.39
+  - biopython=1.81
+  - hyphy=2.5.47
   - raxml-ng=1.1.0 
-  - snakemake=7.8.5
-  - stephenshank::tn93=1.0.7
+  - snakemake=7.22.0
+  - tn93=1.0.9
   - python-bioext=0.20.4
-  - python=3.7.2
+  - python=3.9

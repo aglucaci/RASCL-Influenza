@@ -1,12 +1,14 @@
 {
-  "label":"flu-latest",
-  "queryDataDir":"flu-query",
-  "backgroundDataDir":"flu-background",
+  "label":"H5N1-avian",
+  "queryDataDir":"H5N1-avian",
+  "backgroundDataDir":"H5N1-avian",
+  "queryFile": "gisaid_epiflu_sequence_QUERY.fasta",
+  "backgroundFile": "gisaid_epiflu_sequence_BACKGROUND.fasta",
   "fileEnding": ".fasta",
-  "referenceSequencesDataDir": "RefSeqs",
-  "max_ref":"200",
+  "referenceSequencesDataDir": "H5N1-avian",
+  "max_background":"200",
   "max_query":"500",
   "threshold_query":"0.0005",
-  "threshold_ref":"0.001",
+  "threshold_background":"0.001",
   "hyphy-analyses":"hyphy-analyses"
 }

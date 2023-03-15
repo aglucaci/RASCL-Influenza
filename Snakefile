@@ -26,29 +26,30 @@ with open("cluster.json", "r") as in_c:
 # User settings
 #----------------------------------------------------------------------
 BASEDIR = os.getcwd()
+
 print("We are operating out of base directory:", BASEDIR)
 
-# Which clades are you analyzing?
+# Settings
 LABEL = config["label"] # Analysis label
 QUERY_DATA_DIR = config["queryDataDir"]
 BACKGROUND_DATA_DIR = config["backgroundDataDir"]
 FILE_ENDING = config["fileEnding"]
 REFERENCE_SEQUENCES = config["referenceSequencesDataDir"]
+QUERY_FILE = config["queryFile"]
+BACKGROUND_FILE = config["backgroundFile"]
+
+print("# Processing query sequences:", QUERY_DATA_DIR, QUERY_FILE)
+print("# Processing background sequences:", BACKGROUND_DATA_DIR, BACKGROUND_FILE)
 
 #----------------------------------------------------------------------
 # End -- User defined settings 
 #----------------------------------------------------------------------
 
 # For debugging or single gene analyses
-genes = ["HA", "NA"]
+#genes = ["HA", "NA"]
 
-#QUERY_SAMPLES = []
-#BACKGROUND_SAMPLES = []
-
-#for gene in genes:
-#    QUERY_SAMPLES.append(os.path.join(QUERY_DATA_DIR, gene + FILE_ENDING))
-#    BACKGROUND_SAMPLES.append(os.path.join(BACKGROUND_DATA_DIR, gene + FILE_ENDING))
-#end for
+#genes = ["PB2","PB1_F2","PB1","PA_X","PA","NS1","NP","NEP","NA","M2","M1","HA"]
+genes = ["PB2","PB1_F2","PB1","PA_X","PA","NS1","NP","NEP","NA","M2","M1","HA"]
 
 # Set output directory
 OUTDIR = os.path.join(BASEDIR, "results", LABEL)
@@ -70,20 +71,22 @@ BUSTEDSMH = os.path.join(HYPHY_ANALYSES_DIR, "BUSTED-MH", "BUSTED-MH.bf")
 #----------------------------------------------------------------------
 rule all:
     input:
-        expand(os.path.join(OUTDIR, "{GENE}.query.fa"), GENE=genes),
-        expand(os.path.join(OUTDIR, "{GENE}.reference.fa"), GENE=genes),
+        os.path.join(OUTDIR, QUERY_FILE + ".fa"),
+        os.path.join(OUTDIR, BACKGROUND_FILE + ".fa"),
+        #expand(os.path.join(OUTDIR, "{GENE}.query.fa"), GENE=genes),
+        #expand(os.path.join(OUTDIR, "{GENE}.reference.fa"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.query.bam"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.query.msa.OG"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.query.msa.NS"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.query.msa.SA"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.query.compressed.fas"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.query.json"), GENE=genes),
-        expand(os.path.join(OUTDIR, "{GENE}.reference.bam"), GENE=genes),
-        expand(os.path.join(OUTDIR, "{GENE}.reference.msa.OG"), GENE=genes),
-        expand(os.path.join(OUTDIR, "{GENE}.reference.msa.NS"), GENE=genes),
-        expand(os.path.join(OUTDIR, "{GENE}.reference.msa.SA"), GENE=genes),
-        expand(os.path.join(OUTDIR, "{GENE}.reference.json"), GENE=genes),
-        expand(os.path.join(OUTDIR, "{GENE}.reference.compressed.fas"), GENE=genes),
+        expand(os.path.join(OUTDIR, "{GENE}.background.bam"), GENE=genes),
+        expand(os.path.join(OUTDIR, "{GENE}.background.msa.OG"), GENE=genes),
+        expand(os.path.join(OUTDIR, "{GENE}.background.msa.NS"), GENE=genes),
+        expand(os.path.join(OUTDIR, "{GENE}.background.msa.SA"), GENE=genes),
+        expand(os.path.join(OUTDIR, "{GENE}.background.json"), GENE=genes),
+        expand(os.path.join(OUTDIR, "{GENE}.background.compressed.fas"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.combined.fas"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.AA.fas"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.combined.fas.raxml.bestTree"), GENE=genes),
@@ -116,20 +119,20 @@ rule all:
 #----------------------------------------------------------------------
 rule cleaner_query:
     input:
-        _in = os.path.join(BASEDIR, "data", QUERY_DATA_DIR, "{GENE}" + FILE_ENDING)
+        input = os.path.join(BASEDIR, "data", QUERY_DATA_DIR, QUERY_FILE)
     output:
-        _out = os.path.join(OUTDIR, "{GENE}.query.fa")
+        output = os.path.join(OUTDIR, QUERY_FILE + ".fa")
     shell:
-       "bash scripts/cleaner.sh {input._in} {output._out}"
+       "bash scripts/cleaner.sh {input.input} {output.output}"
 #end rule
 
-rule cleaner_ref:
+rule cleaner_background:
     input:
-        _in = os.path.join(BASEDIR, "data", BACKGROUND_DATA_DIR, "{GENE}" + FILE_ENDING)
+        input = os.path.join(BASEDIR, "data", BACKGROUND_DATA_DIR, BACKGROUND_FILE)
     output:
-        _out = os.path.join(OUTDIR, "{GENE}.reference.fa")
+        output = os.path.join(OUTDIR, BACKGROUND_FILE + ".fa")
     shell:
-       "bash scripts/cleaner.sh {input._in} {output._out}"
+       "bash scripts/cleaner.sh {input.input} {output.output}"
 #end rule
 
 #---------------------------------------------------------------------
@@ -137,13 +140,13 @@ rule cleaner_ref:
 #----------------------------------------------------------------------
 rule bealign_query:
     input:
-        in_genome = rules.cleaner_query.output._out,
-        in_gene_ref_seq = os.path.join("reference", REFERENCE_SEQUENCES, "{GENE}" + FILE_ENDING)
+        in_genome = rules.cleaner_query.output.output,
+        in_gene_RefSeq = os.path.join("data", "reference", REFERENCE_SEQUENCES, "{GENE}" + FILE_ENDING)
     output:
         output = os.path.join(OUTDIR, "{GENE}.query.bam")
     shell:
-        "bealign -r {input.in_gene_ref_seq} -m HIV_BETWEEN_F {input.in_genome} {output.output}"
-#end rule -- bealign
+        "bealign -r {input.in_gene_RefSeq} -m HIV_BETWEEN_F {input.in_genome} {output.output}"
+#end rule
 
 rule bam2msa_query:
     input:
@@ -152,7 +155,7 @@ rule bam2msa_query:
         out_msa = os.path.join(OUTDIR, "{GENE}.query.msa.OG")
     shell:
         "bam2msa {input.in_bam} {output.out_msa}"        
-#end rule -- bam2msa_query
+#end rule
 
 rule remove_stop_codons_query:
    input:
@@ -171,7 +174,7 @@ rule strike_ambigs_query:
    conda: 'environment.yml'
    shell:
       "hyphy scripts/strike-ambigs.bf --alignment {input.in_msa} --output {output.out_strike_ambigs}"
-#end rule -- strike_ambigs_query
+#end rule
 
 rule tn93_cluster_query:
     params:
@@ -184,79 +187,78 @@ rule tn93_cluster_query:
         out_json = os.path.join(OUTDIR, "{GENE}.query.json")
     shell:
         "python3 scripts/tn93_cluster.py --input {input.in_msa} --output_fasta {output.out_fasta} --output_json {output.out_json} --threshold {params.THRESHOLD_QUERY} --max_retain {params.MAX_QUERY}"
-#end rule tn93_cluster_query
+#end rule
 
 #----------------------------------------------------------------------
 # Do the above for background sequences.
 #----------------------------------------------------------------------
-rule bealign_ref:
+rule bealign_background:
     input:
-        #in_genome_ref = os.path.join("data", BACKGROUND_DATA_DIR, "{GENE}" + FILE_ENDING),
-        in_genome_ref = rules.cleaner_ref.output._out,
-        in_gene_ref_seq = rules.bealign_query.input.in_gene_ref_seq
+        in_genome_background = rules.cleaner_background.output.output,
+        in_gene_RefSeq = rules.bealign_query.input.in_gene_RefSeq
     output:
-        output = os.path.join(OUTDIR, "{GENE}.reference.bam")
+        output = os.path.join(OUTDIR, "{GENE}.background.bam")
     shell:
-        "bealign -r {input.in_gene_ref_seq} -m HIV_BETWEEN_F -K {input.in_genome_ref} {output.output}"
-#end rule -- bealign_ref
+        "bealign -r {input.in_gene_RefSeq} -m HIV_BETWEEN_F -K {input.in_genome_background} {output.output}"
+#end rule 
 
-rule bam2msa_ref:
+rule bam2msa_background:
     input:
-        in_bam = rules.bealign_ref.output.output
+        in_bam = rules.bealign_background.output.output
     output:
-        out_msa = os.path.join(OUTDIR, "{GENE}.reference.msa.OG")
+        out_msa = os.path.join(OUTDIR, "{GENE}.background.msa.OG")
     shell:
         "bam2msa {input.in_bam} {output.out_msa}"
-#end rule -- bam2msa_ref
+#end rule
 
-rule remove_stop_codons_ref:
+rule remove_stop_codons_background:
    input:
-       input = rules.bam2msa_ref.output.out_msa
+       input = rules.bam2msa_background.output.out_msa
    output:
-       output = os.path.join(OUTDIR, "{GENE}.reference.msa.NS")
+       output = os.path.join(OUTDIR, "{GENE}.background.msa.NS")
    shell:
       "hyphy cln Universal {input.input} 'No/No' {output.output}"
 #end rule
 
-rule strike_ambigs_ref:
+rule strike_ambigs_background:
    input:
-       in_msa = rules.remove_stop_codons_ref.output.output
+       in_msa = rules.remove_stop_codons_background.output.output
    output:
-       out_strike_ambigs = os.path.join(OUTDIR, "{GENE}.reference.msa.SA")
+       out_strike_ambigs = os.path.join(OUTDIR, "{GENE}.background.msa.SA")
    conda: 'environment.yml'
    shell:
       "hyphy scripts/strike-ambigs.bf --alignment {input.in_msa} --output {output.out_strike_ambigs}"
-#end rule -- strike_ambigs_ref
+#end rule
 
-rule tn93_cluster_ref:
+rule tn93_cluster_background:
     params:
-        THRESHOLD_REF = config["threshold_ref"],
-        MAX_REF = config["max_ref"],
+        THRESHOLD_background = config["threshold_background"],
+        MAX_background = config["max_background"],
     input:
-        in_msa = rules.strike_ambigs_ref.output.out_strike_ambigs,
-        in_gene_ref_seq = rules.bealign_query.input.in_gene_ref_seq
+        in_msa = rules.strike_ambigs_background.output.out_strike_ambigs,
+        in_gene_RefSeq = rules.bealign_query.input.in_gene_RefSeq
     output:
-        out_fasta = os.path.join(OUTDIR, "{GENE}.reference.compressed.fas"),
-        out_json = os.path.join(OUTDIR, "{GENE}.reference.json")
+        out_fasta = os.path.join(OUTDIR, "{GENE}.background.compressed.fas"),
+        out_json = os.path.join(OUTDIR, "{GENE}.background.json")
     shell:
-        "python3 scripts/tn93_cluster.py --input {input.in_msa} --output_fasta {output.out_fasta} --output_json {output.out_json} --threshold {params.THRESHOLD_REF} --max_retain {params.MAX_REF} --reference_seq {input.in_gene_ref_seq}"
-#end rule tn93_cluster_ref
+        "python3 scripts/tn93_cluster.py --input {input.in_msa} --output_fasta {output.out_fasta} --output_json {output.out_json} --threshold {params.THRESHOLD_background} --max_retain {params.MAX_background} --reference_seq {input.in_gene_RefSeq}"
+#end rule
 
-# Combine them, the alignment ----------------------------------------------------
+# Combine them, the alignments ----------------------------------------------------
 rule combine:
     params:
         THRESHOLD_QUERY = config["threshold_query"]
     input:
         in_compressed_fas = rules.tn93_cluster_query.output.out_fasta,
-        in_msa = rules.tn93_cluster_ref.output.out_fasta,
-	in_gene_ref_seq = rules.bealign_query.input.in_gene_ref_seq
+        in_msa = rules.tn93_cluster_background.output.out_fasta,
+	in_gene_RefSeq = rules.bealign_query.input.in_gene_RefSeq
     output:
         output = os.path.join(OUTDIR, "{GENE}.combined.fas")
         #output_csv = os.path.join(OUTDIR, "{GENE}.combined.fas.csv")
     conda: 'environment.yml'
     shell:
-        "python3 scripts/combine.py --input {input.in_compressed_fas} -o {output.output} --threshold {params.THRESHOLD_QUERY} --msa {input.in_msa} --reference_seq {input.in_gene_ref_seq}"
-#end rule -- combine
+        "python3 scripts/combine.py --input {input.in_compressed_fas} -o {output.output} --threshold {params.THRESHOLD_QUERY} --msa {input.in_msa} --reference_seq {input.in_gene_RefSeq}"
+#end rule
 
 # Convert to protein
 rule convert_to_protein:
@@ -267,7 +269,7 @@ rule convert_to_protein:
     conda: 'environment.yml'
     shell:
         "hyphy conv Universal 'Keep Deletions' {input.combined_fas} {output.protein_fas}"
-#end rule -- convert_to_protein
+#end rule
 
 # Combined ML Tree
 rule raxml:
@@ -279,7 +281,7 @@ rule raxml:
         combined_tree = os.path.join(OUTDIR, "{GENE}.combined.fas.raxml.bestTree")
     shell:
         "raxml-ng --model GTR --msa {input.combined_fas} --threads {params.THREADS} --tree pars{{3}} --force"
-#end rule -- raxml
+#end rule
 
 rule annotate:
     input:
@@ -292,7 +294,7 @@ rule annotate:
     conda: 'environment.yml'
     shell:
        "bash scripts/annotate.sh {input.in_tree} 'REFERENCE' {input.in_compressed_fas} {LABEL} {BASEDIR}"
-#end rule annotate
+#end rule 
 
 ######################################################################
 #---------------------Selection analyses ----------------------------#

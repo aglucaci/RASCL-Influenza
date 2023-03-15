@@ -10,10 +10,10 @@ printf "Running snakemake...\n"
 mkdir -p logs
 
 snakemake \
-      -s Snakefile.MH.flu \
+      -s Snakefile \
       --cluster-config cluster.json \
-      --cluster "qsub -V -l nodes={cluster.nodes}:ppn={cluster.ppn} -q {cluster.name} -l walltime=120:00:00 -e logs -o logs" \
-      --jobs 8 all \
+      --cluster "qsub -V -l nodes={cluster.nodes}:ppn={cluster.ppn} -q {cluster.name} -l walltime=72:00:00 -e logs -o logs" \
+      --jobs 10 all \
       --rerun-incomplete \
       --keep-going \
       --reason \

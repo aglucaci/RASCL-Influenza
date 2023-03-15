@@ -2,6 +2,6 @@
   {
   "cluster" : "qsub",
   "nodes": 1,
-  "ppn": 8,
+  "ppn": 16,
   "name":"epyc2"
 }}
