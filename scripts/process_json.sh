@@ -1,7 +1,6 @@
 #!/bin/bash
-#@Usage: bash scripts/process_json.sh /home/aglucaci/RASCL
-#@Usage: bash scripts/process_json.sh /data/shares/veg/aglucaci/RASCL BA.2-01312022
-
+#@Usage: bash scripts/process_json.sh {Working directory} {Folder in results}
+#@Usage: bash scripts/process_json.sh /data/shares/veg/aglucaci/RASCL-Influenza H3N2
 
 ## Declares
 BASEDIR=$1

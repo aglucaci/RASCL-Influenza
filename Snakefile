@@ -101,13 +101,15 @@ rule all:
         expand(os.path.join(OUTDIR, "{GENE}.PRIME.json"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.FADE.json"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.BUSTEDS.json"), GENE=genes),
+        expand(os.path.join(OUTDIR, "{GENE}.BUSTED.json"), GENE=genes),
+        expand(os.path.join(OUTDIR, "{GENE}.BUSTED-MH.json"), GENE=genes),
+        expand(os.path.join(OUTDIR, "{GENE}.BUSTEDS-MH.json"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.RELAX.json"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.CFEL.json"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.ABSREL.json"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.ABSRELS.json"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.ABSREL-MH.json"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.ABSRELS-MH.json"), GENE=genes),
-        expand(os.path.join(OUTDIR, "{GENE}.BUSTEDS-MH.json"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.FMM.json"), GENE=genes),
         expand(os.path.join(OUTDIR, "{GENE}.RELAX-MH.json"), GENE=genes),
         os.path.join(OUTDIR, LABEL + "_summary.json"),
@@ -356,7 +358,7 @@ rule meme:
 #        "hyphy ABSREL --alignment {input.in_msa} --tree {input.in_tree} --output {output.output} --branches {LABEL}"
 #end rule -- absrel
 
-rule busted:
+rule busteds:
     input:
         in_msa = rules.combine.output.output,
         in_tree_clade = rules.annotate.output.out_clade_tree
@@ -364,8 +366,41 @@ rule busted:
         output = os.path.join(OUTDIR, "{GENE}.BUSTEDS.json")
     conda: 'environment.yml'
     shell:
-        "hyphy BUSTED --alignment {input.in_msa} --tree {input.in_tree_clade} --output {output.output} --branches {LABEL} --starting-points 10"
-#end rule -- busted
+        "hyphy BUSTED --alignment {input.in_msa} --tree {input.in_tree_clade} --output {output.output} --branches {LABEL} --starting-points 10 --srv Yes"
+#end rule
+
+rule busted:
+    input:
+        in_msa = rules.combine.output.output,
+        in_tree_clade = rules.annotate.output.out_clade_tree
+    output:
+        output = os.path.join(OUTDIR, "{GENE}.BUSTED.json")
+    conda: 'environment.yml'
+    shell:
+        "hyphy BUSTED --alignment {input.in_msa} --tree {input.in_tree_clade} --output {output.output} --branches {LABEL} --starting-points 10 --srv No"
+#end rule
+
+rule bustedsmh:
+    input:
+        in_msa = rules.combine.output.output,
+        in_tree_clade = rules.annotate.output.out_clade_tree
+    output:
+        output = os.path.join(OUTDIR, "{GENE}.BUSTEDS-MH.json")
+    conda: 'environment.yml'
+    shell:
+        "hyphy BUSTED --alignment {input.in_msa} --tree {input.in_tree_clade} --output {output.output} --branches {LABEL} --starting-points 10 --srv Yes --multiple-hits Double+Triple"
+#end rule
+
+rule bustedmh:
+    input:
+        in_msa = rules.combine.output.output,
+        in_tree_clade = rules.annotate.output.out_clade_tree
+    output:
+        output = os.path.join(OUTDIR, "{GENE}.BUSTED-MH.json")
+    conda: 'environment.yml'
+    shell:
+        "hyphy BUSTED --alignment {input.in_msa} --tree {input.in_tree_clade} --output {output.output} --branches {LABEL} --starting-points 10 --srv No --multiple-hits Double+Triple"
+#end rule
 
 rule relax:
     input:
@@ -469,18 +504,6 @@ rule absrelsmh:
     shell:
         "hyphy ABSREL --alignment {input.in_msa} --tree {input.in_tree} --output {output.output} --branches {LABEL} --multiple-hits Double+Triple --srv Yes"
 #end rule 
-
-rule bustedmh:
-    input:
-        in_msa = rules.combine.output.output,
-        in_tree_clade = rules.annotate.output.out_clade_tree
-    output:
-        output = os.path.join(OUTDIR, "{GENE}.BUSTEDS-MH.json")
-    conda: 'environment.yml'
-    shell:
-        #"mpirun -np {PPN} HYPHYMPI {BUSTEDSMH} --alignment {input.in_msa} --tree {input.in_tree_clade} --output {output.output} --branches {LABEL} --starting-points 10"
-        "hyphy {BUSTEDSMH} --alignment {input.in_msa} --tree {input.in_tree_clade} --output {output.output} --branches {LABEL} --starting-points 10"
-#end rule -- busted
 
 rule fmm:
     input:
